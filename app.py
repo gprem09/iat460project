@@ -11,9 +11,7 @@ def index():
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
-    # print("hitting analyze endpoint")
     data = request.json
-    
     txt = data.get("text", "")
     
     if not txt:
@@ -21,23 +19,18 @@ def analyze():
         
     try:
         emo_data = analyze_text(txt)
-        
-        # get grid from loom
         grid_cols = build_grid(emo_data)
-        
-        # print(emo_data)
         
         return jsonify({
             "metadata": emo_data,
             "grid": grid_cols
         })
     except Exception as e:
-        print("omg error in analyze:", e)
+        print(f"Analysis error: {e}")
         return jsonify({"error": "Failed to analyze text"}), 500
 
 @app.route("/render_pdf", methods=["POST"])
 def render_pdf():
-    # print("rendering pdf now")
     data = request.json
     
     meta = data.get("metadata", {})
@@ -61,7 +54,7 @@ def render_pdf():
             mimetype="application/pdf"
         )
     except Exception as e:
-        print("crashed pdf render :(", e)
+        print(f"PDF render error: {e}")
         return jsonify({"error": "Failed to render PDF"}), 500
 
 if __name__ == "__main__":

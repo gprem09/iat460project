@@ -3,4 +3,3 @@ python-dotenv==1.2.2
 google-genai==1.68.0
 perlin-noise==1.13
 reportlab==4.4.10
-Pillow==12.1.1

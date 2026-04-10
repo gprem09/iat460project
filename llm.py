@@ -7,15 +7,12 @@ from google.genai import types
 load_dotenv()
 
 def analyze_text(txt: str):
-    # get the key first
     key = os.getenv("GEMINI_API_KEY")
     if not key or key == "your_gemini_api_key_here":
-        print("NO API KEY D:")
-        raise ValueError("need api key in .env")
+        raise ValueError("GEMINI_API_KEY is missing or not configured in .env")
         
     c = genai.Client(api_key=key)
     
-    # huge prompt lol
     prompt = f"""
     Analyze the following text and extract its core emotional data for a generative art embroidery project.
     
@@ -35,7 +32,6 @@ def analyze_text(txt: str):
     retries = 3
     for i in range(retries):
         try:
-            # print("calling gemini...")
             resp = c.models.generate_content(
                 model='gemini-2.5-flash',
                 contents=prompt,
@@ -46,24 +42,21 @@ def analyze_text(txt: str):
             
             res = json.loads(resp.text)
             
-            # print(res)
-            
-            # checking if it missed anything
-            if not all(k in res for k in ("primary_emotion", "intensity_score", "color_palette", "poetic_subtitle")):
-                raise ValueError("missing stuff")
+            required_keys = ("primary_emotion", "intensity_score", "color_palette", "poetic_subtitle")
+            if not all(k in res for k in required_keys):
+                raise ValueError(f"Response missing required keys: {[k for k in required_keys if k not in res]}")
                 
             if len(res["color_palette"]) != 7:
-                 raise ValueError("not 7 colors")
+                raise ValueError(f"Expected 7 palette colors, got {len(res['color_palette'])}")
                 
             res["intensity_score"] = float(res.get("intensity_score", 0.5))
-            res["intensity_score"] = max(0.0, min(1.0, res["intensity_score"])) # clamp it just in case
+            res["intensity_score"] = max(0.0, min(1.0, res["intensity_score"]))
                 
             return res
             
         except Exception as e:
-            print(f"failed attempt {i + 1}: {e}")
+            print(f"Gemini attempt {i + 1}/{retries} failed: {e}")
             if i == retries - 1:
-                # print("giving up, using fallback")
                 return {
                     "primary_emotion": "Neutral",
                     "intensity_score": 0.5,
@@ -80,11 +73,10 @@ def analyze_text(txt: str):
                 }
 
 if __name__ == "__main__":
-    # testing out the code
-    x = "I walked through the empty house. The silence was heavy, broken only by the ticking clock. I missed them so much."
+    sample = "I walked through the empty house. The silence was heavy, broken only by the ticking clock. I missed them so much."
     
     try:
-        final = analyze_text(x)
-        print("WORKS:", json.dumps(final, indent=2))
+        result = analyze_text(sample)
+        print(json.dumps(result, indent=2))
     except Exception as e:
-        print("BROKE:", e)
+        print(f"Analysis failed: {e}")

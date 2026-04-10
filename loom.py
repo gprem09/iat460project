@@ -19,7 +19,6 @@ def build_grid(emotion_data):
     GW = 50
     GH = 50
     
-    # seed from emotion string - learned this trick online
     s = sum(ord(c) for c in emo) + int(intensity * 1000)
     octs = max(1, min(10, int(intensity * 10))) 
     noise = PerlinNoise(octaves=octs, seed=s)
@@ -41,13 +40,13 @@ def build_grid(emotion_data):
         
     rng = mx - mn if mx != mn else 1
     
-    # normalize and map to colors
     out = []
     for y in range(GH):
         crow = []
         for x in range(GW):
             n = ((raw[y][x] - mn) / rng) * 0.999
-            idx = math.floor((n * intensity) * L)
+            spread = 0.4 + 0.6 * intensity
+            idx = math.floor(n * spread * L)
             idx = max(0, min(L - 1, idx))
             crow.append(pal[idx]["hex"])
         out.append(crow)
@@ -103,7 +102,6 @@ def draw_pdf(grid_colors, palette, emotion, intensity, subtitle, output_path=Non
             c.setFillColor(white if luma < 150 else black)
             c.circle(cx + csz/2, cy + csz/2, csz/10, stroke=0, fill=1)
             
-    # draw the legend on the right side
     lx = 5.8 * inch
     ly = h - 2.5 * inch
     
@@ -133,7 +131,6 @@ def draw_pdf(grid_colors, palette, emotion, intensity, subtitle, output_path=Non
 
 
 if __name__ == "__main__":
-    # just testing
     test = {
         "primary_emotion": "Joy",
         "intensity_score": 0.9,
